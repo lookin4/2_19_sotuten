@@ -8,6 +8,8 @@
 *.sln
 *.pidb
 *.userprefs
+*.db
+*.opendb
 
 .DS_Store
 build

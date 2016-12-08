@@ -43,6 +43,12 @@ public class MoguraController : Photon.MonoBehaviour
     }
 
 
+    public void SetPos()
+    {
+
+    }
+
+
     void Update()
     {
 
@@ -72,7 +78,7 @@ public class MoguraController : Photon.MonoBehaviour
         //上に出てくる処理。上限まで来たら下がる処理へ移行
         if (status_ == STATUS.UP)
         {
-            if (transform.position.y <= 0.5f)
+            if (transform.position.y < 0.5f)
             {
                 spd.y = 0.05f;/*= new Vector3(0, 0.05f, 0);*/
                 //Vector3 pos = transform.position;
@@ -83,6 +89,7 @@ public class MoguraController : Photon.MonoBehaviour
             else
             {
                 status_ = STATUS.DOWN;
+
             }
         }
         //下に降りる処理。下限まで来たら待ち状態へ移行

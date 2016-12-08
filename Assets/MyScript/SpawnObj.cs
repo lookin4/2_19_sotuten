@@ -11,7 +11,7 @@ public class SpawnObj : Photon.MonoBehaviour
     public string userId_;
 
     int loopStartNum = 0;
-    static public float bpm = 180;
+    static public float bpm = 200;
     private List<float> appearTime_ = new List<float>();
     private List<int> appearLane_ = new List<int>();
 
@@ -70,11 +70,17 @@ public class SpawnObj : Photon.MonoBehaviour
             {
                 // トータル拍数
                 // time * (BPM / 60)
-                //if ((nowTime * (bpm / 60.0f)) >= appearTime[i])
+                float total = nowTime * (bpm / 60.0f);
 
-                if (nowTime >= appearTime_[i])
+                float offset = (bpm / 60.0f / 60.0f * 30.0f); // 30 frame 分 早く出現させる
+
+                if (total + offset >= appearTime_[i])
                 {
-                    CreateMogura(appearLane_[i]);
+                    var diff = (total + offset) - appearTime_[i]; // 拍
+
+                    var fdiff = diff / (bpm / 60.0f / 60.0f); // diff -> frame変換
+
+                    CreateMogura(appearLane_[i], fdiff);
                     //CreateNote(GetLanePosX(appearNum[i]));
                     ++loopStartNum;
                     //break;
@@ -90,7 +96,7 @@ public class SpawnObj : Photon.MonoBehaviour
     /// mogura 作成
     /// </summary>
     /// <param name="lane">0 ~ 4</param>
-    void CreateMogura(int lane)
+    void CreateMogura(int lane, float fdiff)
     {
         float x = -5.0f + 2.5f * lane;
 
@@ -100,7 +106,12 @@ public class SpawnObj : Photon.MonoBehaviour
         // 3:  2.5f
         // 4:  5.0f
 
-        var pos = new Vector3(x, -1.0f, 10.0f);
+        // 0.5f - 1.5f = -1.0f
+
+        // spd: 0.05f / frame
+
+
+        var pos = new Vector3(x, -1.0f + fdiff * 0.05f, 10.0f);
 
         var obj = PhotonNetwork.Instantiate(
             prefabMogura_.name,
@@ -160,7 +171,7 @@ public class SpawnObj : Photon.MonoBehaviour
         photonView.owner.customProperties.TryGetValue("userId", out userId);
 
         //CreateMogura(photonView.ownerId);
-        CreateMogura(int.Parse(userId.ToString()));
+        //CreateMogura(int.Parse(userId.ToString()));
 
     }
 
