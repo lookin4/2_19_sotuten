@@ -38,7 +38,7 @@ public class MoguraController : Photon.MonoBehaviour
 
     public void SetLane(int lane)
     {
-        photonView.TransferOwnership(1); // master 所有
+        //photonView.TransferOwnership(1); // master 所有     いらない。
         laneNum_ = lane;
     }
 

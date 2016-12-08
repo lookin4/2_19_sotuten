@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class SpawnObj : Photon.MonoBehaviour
 {
@@ -7,15 +8,12 @@ public class SpawnObj : Photon.MonoBehaviour
     GameObject prefabMogura_;
 
     int frame_;
-
-    const int MoguraMax = 5;
-    int[] appearCount_ = { 120, 240, 360, 480, 600 }; // 単位(frame)
-    int[] appearLane_ = { 1, 2, 3, 4, 5 }; // 0 は master の為、使わない
-
-    //int[] appearCount_ = new int[MoguraMax];
-    //int[] appearOwner_ = new int[MoguraMax];
-
     public string userId_;
+
+    int loopStartNum = 0;
+    static public float bpm = 180;
+    private List<float> appearTime_ = new List<float>();
+    private List<int> appearLane_ = new List<int>();
 
 
     void Start()
@@ -30,7 +28,7 @@ public class SpawnObj : Photon.MonoBehaviour
         string userName = "Name : aaaa";
         //string userId = "000" + (PhotonNetwork.room.playerCount - 1);
         string userId = "000" + (PhotonNetwork.room.playerCount);
-        PhotonNetwork.autoCleanUpPlayerObjects = false;
+        //PhotonNetwork.autoCleanUpPlayerObjects = false; // room入ってる間は設定できない
 
         // ルームプロパティ
         ExitGames.Client.Photon.Hashtable customProp = new ExitGames.Client.Photon.Hashtable();
@@ -42,6 +40,11 @@ public class SpawnObj : Photon.MonoBehaviour
         Debug.Log("userName(" + userName + ")  userId(" + userId + ")");
 
         userId_ = userId.ToString();
+
+
+        // 
+        NoteInfoSet("stage0");
+        SoundManager.Instance.PlayBGM(SoundManager.BGM.Main);
 
     }
 
@@ -60,35 +63,22 @@ public class SpawnObj : Photon.MonoBehaviour
             PhotonNetwork.isMasterClient)
         {
 
-            //---------------------------------
-            // debug code
+            float nowTime = SoundManager.Instance.GetBgmTime(SoundManager.BGM.Main);
+            Debug.Log("time:" + nowTime);
 
-            if (++frame_ % 60 == 0)
+            for (int i = loopStartNum; i < appearTime_.Count; i++)
             {
-                CreateMogura(lane % 5);
-                lane++;
-            }
+                // トータル拍数
+                // time * (BPM / 60)
+                //if ((nowTime * (bpm / 60.0f)) >= appearTime[i])
 
-            return;
-
-
-            ////////////////////////////////////////
-
-            frame_++;
-
-            for (int i = 0; i < MoguraMax; i++)
-            {
-                if (appearCount_[i] == frame_)
+                if (nowTime >= appearTime_[i])
                 {
                     CreateMogura(appearLane_[i]);
+                    //CreateNote(GetLanePosX(appearNum[i]));
+                    ++loopStartNum;
+                    //break;
                 }
-            }
-
-            // ----------------------------------
-            // debug
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                frame_ = 0;
             }
 
 
@@ -96,10 +86,12 @@ public class SpawnObj : Photon.MonoBehaviour
 
     }
 
-
+    /// <summary>
+    /// mogura 作成
+    /// </summary>
+    /// <param name="lane">0 ~ 4</param>
     void CreateMogura(int lane)
     {
-        //float x = -5.0f + 2.5f * (lane - 1);
         float x = -5.0f + 2.5f * lane;
 
         // 0: -5.0f
@@ -117,6 +109,40 @@ public class SpawnObj : Photon.MonoBehaviour
             0);
 
         obj.GetComponent<MoguraController>().SetLane(lane);
+
+    }
+
+
+    public void ClearInfo()
+    {
+        appearTime_.Clear();
+        appearLane_.Clear();
+    }
+
+
+    public void SetInfo(float time, int num)
+    {
+        appearTime_.Add(time);
+        appearLane_.Add(num);
+    }
+
+
+    void NoteInfoSet(string fname)
+    {
+        ClearInfo();
+
+        TextAsset t = Resources.Load("NoteInfo/" + fname) as TextAsset;
+        //Debug.Log(t.text);
+
+        string[] s = t.text.Split(new char[] { '\n', ',' });
+        //Debug.Log(s.Length);
+
+        //Debug.Log("time : " + s[0] + " num : " + s[1]);
+
+        for (int i = 0; i < s.Length - 1; i += 2)
+        {
+            SetInfo(float.Parse(s[i]), int.Parse(s[i + 1]));
+        }
 
     }
 
