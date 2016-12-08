@@ -12,6 +12,9 @@ public class SpawnObj : Photon.MonoBehaviour
 
     int loopStartNum = 0;
     static public float bpm = 200;
+	string musicTitle;
+	int level;
+
     private List<float> appearTime_ = new List<float>();
     private List<int> appearLane_ = new List<int>();
 
@@ -42,8 +45,9 @@ public class SpawnObj : Photon.MonoBehaviour
         userId_ = userId.ToString();
 
 
-        // 
-        NoteInfoSet("stage0");
+        //ノーツの設定 
+        NoteInfoSet("Holiday");
+
         SoundManager.Instance.PlayBGM(SoundManager.BGM.Main);
 
     }
@@ -52,7 +56,6 @@ public class SpawnObj : Photon.MonoBehaviour
     int lane = 0;
     void Update()
     {
-
         if (!PhotonNetwork.inRoom) return;
 
         // master(1) + client(5) = total (6)
@@ -136,26 +139,52 @@ public class SpawnObj : Photon.MonoBehaviour
         appearTime_.Add(time);
         appearLane_.Add(num);
     }
+		
 
+	void NoteInfoSet(string fname)
+	{
+		ClearInfo();
 
-    void NoteInfoSet(string fname)
-    {
-        ClearInfo();
+		TextAsset t = Resources.Load("NoteInfo/" + fname) as TextAsset;
+		Debug.Log(t.text);
 
-        TextAsset t = Resources.Load("NoteInfo/" + fname) as TextAsset;
-        //Debug.Log(t.text);
+		string[] s = t.text.Split(new char[] { '\n', ',' });
+		//Debug.Log(s[0]);
 
-        string[] s = t.text.Split(new char[] { '\n', ',' });
-        //Debug.Log(s.Length);
+		//Debug.Log("time : " + s[0] + " num : " + s[1]);
+		int idx = 0;
+		while (true) {
+			if (s [idx] == "Title") {
+				musicTitle = s [++idx];
+			} 
+			else if (s [idx] == "BPM") {
+				bpm = float.Parse (s [++idx]);
+			}
+			else if(s[idx] == "level"){
+				level = int.Parse (s [++idx]);
+			}
+			else if(s[idx] == "NotesNum"){
+				idx += 6;
+				break;
+			}
 
-        //Debug.Log("time : " + s[0] + " num : " + s[1]);
+			idx++;
+		}
 
-        for (int i = 0; i < s.Length - 1; i += 2)
-        {
-            SetInfo(float.Parse(s[i]), int.Parse(s[i + 1]));
-        }
+		//Debug.Log (s [idx]);
+		for (int i = idx; i < s.Length - 1; i += 6)
+		{
+			//Debug.Log (s [i]);
+			for (int j = 1; j < 6; j++) {
+				if (s [i + j] != "") {
+					//Debug.Log (s [i + j]);
+					SetInfo(float.Parse(s[i]), j - 1);
+				}
+			}
+			//SetInfo(float.Parse(s[i]), int.Parse(s[i + 1]));
+		}
 
-    }
+	}
 
 
     void OnClick()
